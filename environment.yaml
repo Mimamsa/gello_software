@@ -1,0 +1,23 @@
+# environment.yaml
+channels:
+  - conda-forge
+dependencies:
+  - python==3.10
+  - dm_control
+  - Pillow
+  - pygame
+  - pyquaternion
+  - pyrealsense2
+  - pure-python-adb
+  - quaternion
+  - numpy-quaternion
+  - termcolor
+  - pip:
+    - ur-rtde==1.5.6
+    - pyspacemouse
+    - pyqt6
+    - tyro==0.8.5
+    - zmq
+    - xarm
+    - xarm-python-sdk
+    - opencv-python
