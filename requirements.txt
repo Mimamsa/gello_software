@@ -8,10 +8,11 @@ pyquaternion
 pyrealsense2
 pure-python-adb
 quaternion
-tyro
+tyro==0.8.5
 ur-rtde
 zmq
 xarm
 xarm-python-sdk
 numpy-quaternion
 termcolor
+opencv-python
