@@ -109,14 +109,23 @@ class URRobot(Robot):
             self._free_drive = False
             self.robot.endFreedriveMode()
 
+    def get_tcp_pose(self) -> np.ndarray:
+        """ getActualTCPPose()
+        (x,y,z,rx,ry,rz)
+        """
+        pose = self.r_inter.getActualTCPPose()
+        return pose
+
     def get_observations(self) -> Dict[str, np.ndarray]:
         joints = self.get_joint_state()
-        pos_quat = np.zeros(7)
+        #pos_quat = np.zeros(7)  # no orientation info for now
+        pose = self.get_tcp_pose()
         gripper_pos = np.array([joints[-1]])
         return {
             "joint_positions": joints,
             "joint_velocities": joints,
-            "ee_pos_quat": pos_quat,
+            #"ee_pos_quat": pos_quat,
+            "ee_pose": pose,
             "gripper_position": gripper_pos,
         }
 
