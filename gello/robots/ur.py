@@ -114,6 +114,7 @@ class URRobot(Robot):
         (x,y,z,rx,ry,rz)
         """
         pose = self.r_inter.getActualTCPPose()
+        pose = np.array(pose)
         return pose
 
     def get_observations(self) -> Dict[str, np.ndarray]:
