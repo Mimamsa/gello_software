@@ -99,21 +99,23 @@ def get_sorted_v4l_paths(by_id=True):
     return result
 
 
-class GoProCamera(CameraDriver):
+class USBCamera(CameraDriver):
     """
+    Supported resolutions for Elgato Game Capture HD:
     https://help.elgato.com/hc/en-us/articles/360027952992-Supported-resolutions-for-Elgato-Game-Capture-HD
     """
 
     def __repr__(self) -> str:
-        return f"GoProCamera(device_path={self.device_path})"
+        return f"USBCamera(device_path={self.device_path})"
 
     def __init__(
         self,
         device_path: Optional[str] = None,
         width: int = 1280,
         height: int = 720,
-        cap_buffer_size: int = 1,
-        fps: int = 60
+        cap_buffer_size: int = 2,
+        fps: int = 60,
+        crop_frame: bool = False
     ):
 
         self.device_path = device_path
@@ -121,35 +123,19 @@ class GoProCamera(CameraDriver):
         self.height = height
         self.cap_buffer_size = cap_buffer_size
         self.fps = fps
+        self.crop_frame = crop_frame
 
-        if device_path is None:
-            # Find and reset all Elgato capture cards.
-            # Required to workaround a firmware bug.
-            reset_all_elgato_devices()
-
-            # Wait for all v4l cameras to be back online
-            time.sleep(0.1)
-            v4l_paths = get_sorted_v4l_paths()
-
-            # pop non-relevant paths
-            for i, p in enumerate(v4l_paths):
-                if 'Elgato' not in p:
-                    print(v4l_paths.pop(i))
-            print('v4l_paths: ', v4l_paths)
-
-            # Assume only one GoPro camera exists
-            self.device_path = v4l_paths[0]
-
-        self._cap = cv2.VideoCapture(self.device_path, cv2.CAP_V4L2)
-        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)  # 1920
-        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)  # 1080
+        self._cap = cv2.VideoCapture(self.device_path, cv2.CAP_V4L2)  
+        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         self._cap.set(cv2.CAP_PROP_BUFFERSIZE, self.cap_buffer_size)
         self._cap.set(cv2.CAP_PROP_FPS, self.fps)
+        #self._cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M','J','P','G'))
 
         # Find frame crop parameters
-        self._resized_w = int(self.height/3*4)
-        self._w_offset = int((self.width-self._resized_w)/2)
-
+        if self.crop_frame:
+            self._resized_w = int(self.height/3*4)
+            self._w_offset = int((self.width-self._resized_w)/2)
 
     def __del__(self):
         self._cap.release()
@@ -181,6 +167,38 @@ class GoProCamera(CameraDriver):
             image = cv2.resize(frame, img_size)[:,:,::-1]  # bgr -> rgb
             
         # Crop image resolution (w,h) from (1280,720) to (960,720)
-        image = image[:, self._w_offset:self._w_offset+self._resized_w, :]
+        if self.crop_frame:
+            image = image[:, self._w_offset:self._w_offset+self._resized_w, :]
 
         return image, image[:, :, 0]
+
+
+if __name__ == "__main__":
+    cv2.namedWindow("Elgato")
+    cv2.namedWindow("AVerMedia")
+
+    reset_all_elgato_devices()
+
+    # Wait for all v4l cameras to be back online
+    time.sleep(0.1)
+    
+    v4l_paths = get_sorted_v4l_paths()
+    cameras = []
+    for p in v4l_paths:
+        if 'Elgato' in p:
+            cameras.append(USBCamera(p, 1280, 720, crop_frame=True))    
+    #for p in v4l_paths:
+    #    if 'AVerMedia' in p:
+    #        cameras.append(USBCamera(p, 640, 480))
+    print(cameras)
+
+    while True:
+        start_t = time.monotonic()
+        frame1, _ = cameras[0].read()
+        #frame2, _ = cameras[1].read()
+        cv2.imshow('Elgato', frame1[:,:,::-1])
+        #cv2.imshow('AVerMedia', frame2[:,:,::-1])
+        key = cv2.waitKey(1)
+        if key == 27:
+            break
+        print('FPS: ', 1/(time.monotonic()-start_t))

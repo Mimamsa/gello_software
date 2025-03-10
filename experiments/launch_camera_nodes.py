@@ -5,7 +5,8 @@ import tyro
 import time
 
 #from gello.cameras.realsense_camera import RealSenseCamera, get_device_ids
-from gello.cameras.gopro_camera import GoProCamera, get_sorted_v4l_paths, reset_all_elgato_devices
+from gello.cameras.usb_camera import USBCamera, get_sorted_v4l_paths, reset_all_elgato_devices
+
 from gello.zmq_core.camera_node import ZMQServerCamera
 
 
@@ -15,7 +16,7 @@ class Args:
 
 
 def launch_server(port: int, camera_path: str, args: Args):
-    camera = GoProCamera(camera_path)
+    camera = USBCamera(camera_path)
     server = ZMQServerCamera(camera, port=port, host=args.hostname)
     print(f"Starting camera server on port {port}")
     server.serve()
@@ -28,18 +29,27 @@ def main(args):
 
     # Wait for all v4l cameras to be back online
     time.sleep(0.1)
+    
     v4l_paths = get_sorted_v4l_paths()
-    # pop non-relevant paths
-    for i, p in enumerate(v4l_paths):
-        if 'Elgato' not in p:
-            print(v4l_paths.pop(i))
+    #cameras = []
+    camera_paths = []
+    # store relevant paths
+    # 1st slot for wrist camera, 2nd slot for base camera
+    for p in v4l_paths:
+        if 'Elgato' in p:
+            camera_paths.append(p)
+    #        cameras.append(USBCamera(p, 1280, 720, crop_frame=True))
+    #for p in v4l_paths:
+    #    if 'AVerMedia' in p:
+    #        cameras.append(USBCamera(p, 640, 480))
+    #print(cameras)
 
     camera_port = 5000
     camera_servers = []
 
-    for camera_path in v4l_paths:
+    for camera_path in camera_paths:
         # start a python process for each camera
-        print(f"Launching camera {camera_path} on port {camera_port}")
+        print("Launching camera {} on port {}".format(camera_path, camera_port))
         camera_servers.append(
             Process(target=launch_server, args=(camera_port, camera_path, args))
         )
