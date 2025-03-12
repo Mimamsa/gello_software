@@ -10,6 +10,7 @@ import tyro
 
 from gello.agents.agent import BimanualAgent, DummyAgent
 from gello.agents.gello_agent import GelloAgent
+from gello.agents.act_agent import ACTAgent
 from gello.data_utils.format_obs import save_frame
 from gello.env import RobotEnv
 from gello.robots.robot import PrintRobot
@@ -142,7 +143,14 @@ def main(args):
         elif args.agent == "dummy" or args.agent == "none":
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
         elif args.agent == "policy":
-            raise NotImplementedError("add your imitation policy here if there is one")
+            #raise NotImplementedError("add your imitation policy here if there is one")
+            agent = ACTAgent(
+                policy_path='',
+                stats_path='',
+                temporal_agg=True,
+                sample_frequency=40,
+            )
+            
         else:
             raise ValueError("Invalid agent name")
 
