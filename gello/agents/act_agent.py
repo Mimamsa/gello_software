@@ -11,6 +11,7 @@ from typing import Dict
 
 from gello.agents.agent import Agent
 from gello.agents.policy import ACTPolicy, CNNMLPPolicy
+from gello.agents.aggregate_buffer import AggregateBuffer
 
 
 def get_image(obs, camera_names):
@@ -67,8 +68,10 @@ class ACTAgent(Agent):
 
         # set temporal aggregation variables
         if self.temporal_agg:
-            self.max_timesteps = 306 * 4
-            self.all_time_actions = torch.zeros([self.max_timesteps, self.max_timesteps+self.num_queries-1, self.state_dim]).cuda()
+            self.buffer = AggregateBuffer(
+                num_queries=self.num_queries,
+                state_dim=self.state_dim,
+            )
 
         # load dataset stat
         self.stats_path = stats_path
@@ -94,11 +97,7 @@ class ACTAgent(Agent):
 
 
     def act(self, obs: Dict[str, np.ndarray]) -> np.ndarray:
-
-        #current_qpos = obs["joint_positions"][:self.num_dofs]  # last one dim is the gripper
-        #current_gripper_pos = obs["joint_positions"][-1]  # range [0~1]. 0 for open, 1 for closed
-        #curr_image = obs["wrist_rgb"]
-
+        """Agent act according to observations """
         if self.t % self.sample_period == 0:
             # pre-process image & qpos
             curr_image = get_image(obs, ["wrist_rgb"])
@@ -112,18 +111,9 @@ class ACTAgent(Agent):
 
         if self.temporal_agg:
             # put inference result to aggregation table
-            self.all_time_actions[[self.t], self.t:self.t+self.num_queries] = self.all_actions
-            # pick all past predicted actions for time t
-            actions_for_curr_step = self.all_time_actions[:, self.t]
-            actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
-            actions_for_curr_step = actions_for_curr_step[actions_populated]
-            # get exponential weight vector
-            k = 0.01
-            exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)))
-            exp_weights = exp_weights / exp_weights.sum()
-            exp_weights = torch.from_numpy(exp_weights).cuda().unsqueeze(dim=1)
+            self.buffer.set_action(self.all_actions)
             # get weighted action for time t
-            raw_action = (actions_for_curr_step * exp_weights).sum(dim=0, keepdim=True)
+            raw_action = self.buffer.get_aggregate_action()  # (1,7)
         else:
             raw_action = self.all_actions[:, self.t % self.num_queries]  # (1,7)
 
