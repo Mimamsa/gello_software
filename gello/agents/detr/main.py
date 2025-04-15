@@ -71,6 +71,9 @@ def get_args_parser():
     #parser.add_argument('--max_episode_len', action='store', type=int, help='maximum episode length among demonstrations', required=True)
     parser.add_argument('--max_episode_len', action='store', type=int, help='maximum episode length among demonstrations')
 
+    parser.add_argument('--agent', action='store', type=str, help='')
+    parser.add_argument('--sample_period', action='store', type=int, help='')
+
     return parser
 
 

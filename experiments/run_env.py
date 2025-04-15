@@ -43,6 +43,14 @@ class Args:
     data_dir: str = "~/bc_data"
     bimanual: bool = False
     verbose: bool = False
+    
+    # 'policy_last.ckpt' and 'dataset_stats.pkl' should be inside
+    # '/media/hungyi/Data_sdb5/home/act_ckpts/20250310_1_ckpts_chunk40'
+    # '/media/hungyi/Data_sdb5/home/act_ckpts/20250225_1_ckpts_chunk100'
+    ckpt_dir: str = '/media/hungyi/Data_sdb5/home/act_ckpts/20250310_1_ckpts_chunk40'
+    num_queries: int = 40
+    sample_period: int = 40
+    temporal_agg: bool = False
 
 
 def main(args):
@@ -145,10 +153,11 @@ def main(args):
         elif args.agent == "policy":
             #raise NotImplementedError("add your imitation policy here if there is one")
             agent = ACTAgent(
-                policy_path='',
-                stats_path='',
-                temporal_agg=True,
-                sample_frequency=40,
+                policy_path = args.ckpt_dir+'/policy_last.ckpt',
+                stats_path = args.ckpt_dir+'/dataset_stats.pkl',
+                num_queries = args.num_queries,
+                temporal_agg = args.temporal_agg,
+                sample_period = args.sample_period,
             )
             
         else:

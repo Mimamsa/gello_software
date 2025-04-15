@@ -36,6 +36,7 @@ class ACTAgent(Agent):
         self,
         policy_path,
         stats_path,
+        num_queries,  # TODO: defined by model output shape
         temporal_agg=True,
         sample_period=40,
         num_dofs=6
@@ -43,7 +44,7 @@ class ACTAgent(Agent):
         # load policy_config
         self.policy_config = {
             'lr': 1e-5,
-            'num_queries': 40,
+            'num_queries': num_queries,
             'kl_weight': 10.,
             'hidden_dim': 512,
             'dim_feedforward': 2048,
@@ -111,7 +112,7 @@ class ACTAgent(Agent):
 
         if self.temporal_agg:
             # put inference result to aggregation table
-            self.buffer.set_action(self.all_actions)
+            self.buffer.insert_action(self.all_actions)
             # get weighted action for time t
             raw_action = self.buffer.get_aggregate_action()  # (1,7)
         else:

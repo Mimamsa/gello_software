@@ -28,7 +28,7 @@ class AggregateBuffer:
         self.action_count = 0
 
 
-    def set_action(self, action):
+    def insert_action(self, action):
         """Queue the action to the table"""
         assert len(action.shape) == 3, 'Unsqueeze dim 0 before input'
         assert action.shape[1] == self.num_queries, 'dim 1 of action not equal to self.num_queries'
