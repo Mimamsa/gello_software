@@ -119,13 +119,13 @@ class URRobot(Robot):
 
     def get_observations(self) -> Dict[str, np.ndarray]:
         joints = self.get_joint_state()
-        #pos_quat = np.zeros(7)  # no orientation info for now
+        pos_quat = np.zeros(7)  # no orientation info for now
         pose = self.get_tcp_pose()
         gripper_pos = np.array([joints[-1]])
         return {
             "joint_positions": joints,
             "joint_velocities": joints,
-            #"ee_pos_quat": pos_quat,
+            "ee_pos_quat": pos_quat,
             "ee_pose": pose,
             "gripper_position": gripper_pos,
         }
