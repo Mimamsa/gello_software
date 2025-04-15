@@ -5,6 +5,7 @@ import numpy as np
 
 from gello.cameras.camera import CameraDriver
 from gello.robots.robot import Robot
+from gello.data_utils.conversion_utils import crop_to_4w3h
 
 
 class Rate:
@@ -66,6 +67,10 @@ class RobotEnv:
         observations = {}
         for name, camera in self._camera_dict.items():
             image, depth = camera.read()
+
+            # Crop (only for GoPro + Elagto, (1280,720)->(960, 720))
+            image = crop_to_4w3h(image)
+
             observations[f"{name}_rgb"] = image
             #observations[f"{name}_depth"] = depth
 

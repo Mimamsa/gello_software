@@ -6,6 +6,27 @@ import torch
 import transforms3d._gohlketransforms as ttf
 
 
+def crop_to_4w3h(img):
+    """Crop aspect ratio from 1.78 to 1.33.
+    
+    If resolution of image stream (e.g. 960x720) forwarded to Elgato HD60 X does
+    not fit its resolution settings (e.g. 1280x720), it will pad zeros for all
+    the streaming images to its resolution settings.
+
+    Args
+        img (np.ndarray): Image to be cropped, Numpy ndarray of shape (H, W, 3)
+    Returns
+        (np.ndarray): Cropped image.
+    """
+    h = img.shape[0]
+    w = img.shape[1]
+    assert abs(w/h)-1.78 < 0.01, 'Aspect ratio of input image is not 1.78'
+    resized_w = int(h/3*4)
+    w_offset = int((w-resized_w)/2)
+    img = img[:, w_offset:w_offset+resized_w, :]
+    return img
+
+
 def to_torch(array, device="cpu"):
     if isinstance(array, torch.Tensor):
         return array.to(device)

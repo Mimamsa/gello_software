@@ -11,6 +11,7 @@ import tyro
 from gello.agents.agent import BimanualAgent, DummyAgent
 from gello.agents.gello_agent import GelloAgent
 from gello.data_utils.format_obs import save_frame
+from gello.data_utils.visualize import viz_frame
 from gello.env import RobotEnv
 from gello.robots.robot import PrintRobot
 from gello.zmq_core.robot_node import ZMQClientRobot
@@ -39,6 +40,7 @@ class Args:
     gello_port: Optional[str] = None
     mock: bool = False
     use_save_interface: bool = False
+    visualize_camera_obs: bool = False
     data_dir: str = "~/bc_data"
     bimanual: bool = False
     verbose: bool = False
@@ -210,6 +212,7 @@ def main(args):
 
     save_path = None
     start_time = time.time()
+    ft = time.time()
     while True:
         num = time.time() - start_time
         message = f"\rTime passed: {round(num, 2)}          "
@@ -221,6 +224,15 @@ def main(args):
             flush=True,
         )
         action = agent.act(obs)
+        
+        # visualize frames from all cameras
+        if args.visualize_camera_obs:
+            fp = time.time() - ft
+            fps = round(1/fp, 2)
+            ft = time.time()
+            viz_frame(obs, list(camera_clients.keys()), text=f'FPS: {fps}')
+
+        # Save frames & observation to pickle file
         dt = datetime.datetime.now()
         if args.use_save_interface:
             state = kb_interface.update()
@@ -240,6 +252,7 @@ def main(args):
                 save_path = None
             else:
                 raise ValueError(f"Invalid state {state}")
+
         obs = env.step(action)
 
 
