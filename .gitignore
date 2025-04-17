@@ -2,8 +2,8 @@
 # keep each item within the sections alphabetical
 
 # large files
-*.png
-*.gif
+#*.png
+#*.gif
 
 # mac
 *.DS_Store

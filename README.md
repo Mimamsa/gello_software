@@ -138,6 +138,41 @@ python processes.
 ./kill_nodes.sh
 ```
 
+## Running camera nodes
+
+1. Connecting capture card (e.g. Elgato HD60 X) to the laptop.
+
+2. Modify `run_env.py` to define camera clients.
+e.g.
+```
+camera_clients = {
+    # you can optionally add camera nodes here for imitation learning purposes
+    "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname)
+}
+```
+
+3. Running camera server node by the command.
+```
+python experiments/launch_camera_nodes.py 
+```
+
+Privilege of the capture card should be escalated when the first time camera nodes boot up.
+The warning message will be prompted when needed.
+```
+sudo chmod 777 /dev/bus/usb/002/002
+```
+
+## Visualize camera frames
+
+Visualize frames which camera client received by adding ```--visualize-camera-obs``` option.
+```
+python experiments/run_env.py --agent=spacemouse --visualize-camera-obs
+```
+
+## Quick references
+
+See [QUICKREFS.md](./QUICKREFS.md) for quick references for running a specific application.
+
 ### Using a new robot!
 If you want to use a new robot you need a GELLO that is compatible. If the kiniamtics are close enough, you may directly use an existing GELLO. Otherwise you will have to design your own.
 To add a new robot, simply implement the `Robot` protocol found in `gello/robots/robot`. See `gello/robots/panda.py`, `gello/robots/ur.py`, `gello/robots/xarm_robot.py` for examples.
